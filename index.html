@@ -57,6 +57,9 @@ li.head{list-style:none;margin-left:-22px;font-weight:700;color:var(--red);paddi
 .note-box{background:#fff0f0;color:var(--red);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:14px}
 .back{display:none;border:0;background:none;color:var(--red);font-size:15px;margin-bottom:10px;cursor:pointer}
 .allsz td.amt{font-size:14px}
+#installbar{display:none;background:#fff;border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
+#installbtn{width:100%;border:0;border-radius:10px;background:var(--red);color:#fff;font-size:16px;font-weight:700;padding:13px;cursor:pointer}
+#installhelp{display:none;margin-top:8px;font-size:14px;line-height:1.6;background:#fff4e6;color:#7a3a00;border-radius:8px;padding:10px 12px}
 @media(max-width:760px){#list{width:100%}#detail{display:none;padding:12px}body.show #list{display:none}body.show #detail{display:block}.back{display:block}}
 </style>
 </head>
@@ -70,6 +73,28 @@ li.head{list-style:none;margin-left:-22px;font-weight:700;color:var(--red);paddi
   <div id="list"></div>
   <div id="detail"><div class="empty">왼쪽에서 메뉴를 선택하면 레시피가 표시됩니다.</div></div>
 </main>
+<div id="installbar"><button id="installbtn" type="button">📲 홈 화면에 추가</button><div id="installhelp"></div></div>
+<script>
+(function(){
+  const bar=document.getElementById('installbar'),btn=document.getElementById('installbtn'),help=document.getElementById('installhelp');
+  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+  if(standalone)return;
+  bar.style.display='block';
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  let dp=null;
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e});
+  addEventListener('appinstalled',()=>{bar.style.display='none'});
+  btn.onclick=async()=>{
+    if(dp){dp.prompt();const r=await dp.userChoice;dp=null;if(r&&r.outcome==='accepted')bar.style.display='none';return}
+    const ua=navigator.userAgent;
+    help.innerHTML=/iPhone|iPad|iPod/.test(ua)?'아래 <b>공유 버튼(□↑)</b> → <b>홈 화면에 추가</b>를 눌러주세요.'
+      :/SamsungBrowser/.test(ua)?'오른쪽 아래 <b>≡ 메뉴</b> → <b>현재 페이지 추가</b> → <b>홈 화면</b>을 눌러주세요.'
+      :/KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(ua)?'이 화면에서는 추가가 안 됩니다. 오른쪽 위 <b>⋮</b> → <b>다른 브라우저로 열기</b>(크롬)로 연 뒤 다시 눌러주세요.'
+      :'오른쪽 위 <b>⋮ 메뉴</b> → <b>홈 화면에 추가</b>(또는 앱 설치)를 눌러주세요.';
+    help.style.display='block';
+  };
+})();
+</script>
 <script src="data.js"></script>
 <script>
 const $=s=>document.querySelector(s);
